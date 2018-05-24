@@ -1,0 +1,4 @@
+*.swp
+.pytest_cache/
+build/
+*/__pycache__/
