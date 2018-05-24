@@ -1,6 +1,8 @@
 KsMyVoteInfo
 =========================
 
+[![Build Status](https://travis-ci.org/BlueprintKansas/ksmyvoteinfo-py.svg?branch=master)](https://travis-ci.org/BlueprintKansas/ksmyvoteinfo-py)
+
 KsMyVoteInfo Python module makes it easy to search the Kansas SOS voter registration site
 for the registrant details. You supply first/last name, dob and county, this gem looks
 it up and return the HTML snippet from the site.
