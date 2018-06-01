@@ -9,4 +9,10 @@ deps:
 	pip install -U -r requirements.txt
 	pip install pytest
 
-.PHONY: test build
+distcheck:
+	python setup.py sdist
+
+dist:
+	python setup.py sdist upload
+
+.PHONY: test build deps distcheck dist

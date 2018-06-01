@@ -4,7 +4,7 @@ from robobrowser import RoboBrowser
 
 class KsMyVoteInfo(object):
 
-  version = '0.1'
+  version = '0.2'
 
   COUNTY_CODES = {
     "Allen": "308700",

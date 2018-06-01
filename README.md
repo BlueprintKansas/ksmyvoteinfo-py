@@ -11,7 +11,7 @@ it up and return the HTML snippet from the site.
 
 ```python
 import ksmyvoteinfo
-kmvi = KsMyVoteInfo()
+kmvi = ksmyvoteinfo.KsMyVoteInfo()
 r = kmvi.lookup(first_name='No', last_name='Suchperson', dob='1966-03-26', county='Douglas')
 if r:
   print(r)
