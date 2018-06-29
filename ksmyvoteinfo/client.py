@@ -4,7 +4,7 @@ from robobrowser import RoboBrowser
 
 class KsMyVoteInfo(object):
 
-  version = '0.2'
+  version = '0.3'
 
   COUNTY_CODES = {
     "Allen": "308700",
@@ -130,7 +130,7 @@ class KsMyVoteInfo(object):
     browser.submit_form(form)
 
     if browser.select('#registrant'):
-      return browser.select('#registrant')[0].text
+      return browser.select('#registrant')[0]
     else:
       return False
 
