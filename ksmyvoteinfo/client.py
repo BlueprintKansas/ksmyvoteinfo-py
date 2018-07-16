@@ -39,7 +39,7 @@ class KsMyVoteInfoResult(object):
 
 class KsMyVoteInfo(object):
 
-  version = '0.4'
+  version = '0.5'
   base_url = 'https://myvoteinfo.voteks.org/VoterView'
   registrant_search_url = base_url + '/RegistrantSearch.do'
 
