@@ -3,8 +3,9 @@ import dateutil.parser
 from robobrowser import RoboBrowser
 
 class KsMyVoteInfoResult(object):
-  def __init__(self, soup):
+  def __init__(self, soup, ballot_soup=None):
     self.soup = soup
+    self.ballot_soup = ballot_soup
 
   def norm_whitespace(self, val):
     return ' '.join(val.replace("\xa0", ' ').replace("\n", ' ').replace("\r", ' ').replace("\t", ' ').split())
@@ -24,6 +25,14 @@ class KsMyVoteInfoResult(object):
         tree[key] = self.norm_whitespace(val)
       p['tree'] = tree
       els.append(p)
+
+    if self.ballot_soup: # only if we have one Result
+      els[0]['sample_ballots'] = []
+      for ballot_link in self.ballot_soup:
+        href = ballot_link.get('href')
+        text = ballot_link.get_text()
+        els[0]['sample_ballots'].append({'href':href, 'text':text})
+
     return els
 
 # end result class
@@ -31,6 +40,13 @@ class KsMyVoteInfoResult(object):
 class KsMyVoteInfo(object):
 
   version = '0.4'
+  base_url = 'https://myvoteinfo.voteks.org/VoterView'
+  registrant_search_url = base_url + '/RegistrantSearch.do'
+
+  def __init__(self, **kwargs):
+    self.url = self.__class__.registrant_search_url
+    if 'url' in kwargs:
+      self.url = kwargs['url']
 
   COUNTY_CODES = {
     "Allen": "308700",
@@ -146,7 +162,7 @@ class KsMyVoteInfo(object):
         raise Exception("Invalid county: %s" %(county))
 
     browser = RoboBrowser(user_agent='ksmyvoteinfo ua', parser='html.parser')
-    browser.open('https://myvoteinfo.voteks.org/VoterView/RegistrantSearch.do')
+    browser.open(self.url)
     form = browser.get_forms()[0] #(name_='registrantSearchForm')
     date = dateutil.parser.parse(dob)
     form['nameFirst'] = first_name
@@ -159,7 +175,7 @@ class KsMyVoteInfo(object):
     browser.submit_form(form)
 
     if browser.select('#registrant'):
-      return KsMyVoteInfoResult(browser.select('#registrant'))
+      return KsMyVoteInfoResult(browser.select('#registrant'), browser.select('.sampleBallot'))
     elif re.search(u'multiple possible results', str(browser.parsed)):
       return KsMyVoteInfoResult(browser.select('.search-result'))
     else:
