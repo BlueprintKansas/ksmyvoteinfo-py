@@ -2,9 +2,35 @@ import re
 import dateutil.parser
 from robobrowser import RoboBrowser
 
+class KsMyVoteInfoResult(object):
+  def __init__(self, soup):
+    self.soup = soup
+
+  def norm_whitespace(self, val):
+    return ' '.join(val.replace("\xa0", ' ').replace("\n", ' ').replace("\r", ' ').replace("\t", ' ').split())
+
+  def parsed(self):
+    els = []
+    for el in self.soup:
+      p = {}
+      p['spans'] = el.find_all('span')
+      p['labels'] = el.find_all('span', class_='label')
+      p['data'] = el.find_all('span', class_='data')
+      tree = {}
+      for idx, label in enumerate(p['labels']):
+        key = self.norm_whitespace(label.get_text())
+        strings = p['data'][idx].stripped_strings
+        val = '<br/>'.join(strings)
+        tree[key] = self.norm_whitespace(val)
+      p['tree'] = tree
+      els.append(p)
+    return els
+
+# end result class
+
 class KsMyVoteInfo(object):
 
-  version = '0.3'
+  version = '0.4'
 
   COUNTY_CODES = {
     "Allen": "308700",
@@ -115,14 +141,17 @@ class KsMyVoteInfo(object):
   }
 
 
-  def lookup(self, *, first_name, last_name, dob, county):
+  def lookup(self, *, first_name, last_name, dob, county=None):
+    if county and county not in self.COUNTY_CODES:
+        raise Exception("Invalid county: %s" %(county))
+
     browser = RoboBrowser(user_agent='ksmyvoteinfo ua', parser='html.parser')
     browser.open('https://myvoteinfo.voteks.org/VoterView/RegistrantSearch.do')
     form = browser.get_forms()[0] #(name_='registrantSearchForm')
     date = dateutil.parser.parse(dob)
     form['nameFirst'] = first_name
     form['nameLast'] = last_name
-    form['county'] = self.COUNTY_CODES[county] # TODO capture invalid county values?
+    form['county'] = self.COUNTY_CODES[county] if county else ''
     form['dobMonth'] = date.strftime('%m')
     form['dobYear'] = date.strftime('%Y')
     form['dobDay'] = date.strftime('%d')
@@ -130,7 +159,9 @@ class KsMyVoteInfo(object):
     browser.submit_form(form)
 
     if browser.select('#registrant'):
-      return browser.select('#registrant')[0]
+      return KsMyVoteInfoResult(browser.select('#registrant'))
+    elif re.search(u'multiple possible results', str(browser.parsed)):
+      return KsMyVoteInfoResult(browser.select('.search-result'))
     else:
       return False
 
