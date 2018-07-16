@@ -14,7 +14,7 @@ import ksmyvoteinfo
 kmvi = ksmyvoteinfo.KsMyVoteInfo()
 r = kmvi.lookup(first_name='No', last_name='Suchperson', dob='1966-03-26', county='Douglas')
 if r:
-  print(r)
+  print(r.parsed()[0]['tree'])
 else:
   print("Sorry, No Suchperson is not registered")
 

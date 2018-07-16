@@ -13,6 +13,4 @@ def test_lookup_fail():
 def test_lookup_pass():
   kmvi = KsMyVoteInfo()
   r = kmvi.lookup(first_name='Kris', last_name='Kobach', dob='1966-03-26', county='Douglas')
-  regex = re.compile(r'Republican')
-  matches = regex.search(r.text)
-  assert matches is not None
+  assert r.parsed()[0]['tree']['Party'] == 'Republican'
