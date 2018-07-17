@@ -31,7 +31,7 @@ class KsMyVoteInfoResult(object):
       for ballot_link in self.ballot_soup:
         href = ballot_link.get('href')
         text = ballot_link.get_text()
-        els[0]['sample_ballots'].append({'href':href, 'text':text})
+        els[0]['sample_ballots'].append({'href':KsMyVoteInfo.base_url + '/' + href, 'text':text})
 
     return els
 
@@ -39,7 +39,7 @@ class KsMyVoteInfoResult(object):
 
 class KsMyVoteInfo(object):
 
-  version = '0.5'
+  version = '0.6'
   base_url = 'https://myvoteinfo.voteks.org/VoterView'
   registrant_search_url = base_url + '/RegistrantSearch.do'
 
