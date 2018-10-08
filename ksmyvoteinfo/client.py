@@ -3,9 +3,11 @@ import dateutil.parser
 from robobrowser import RoboBrowser
 
 class KsMyVoteInfoResult(object):
-  def __init__(self, soup, ballot_soup=None):
+  def __init__(self, soup, ballot_soup=None, district_soup=None, elections_soup=None):
     self.soup = soup
     self.ballot_soup = ballot_soup
+    self.district_soup = district_soup
+    self.elections_soup = elections_soup
 
   def norm_whitespace(self, val):
     return ' '.join(val.replace("\xa0", ' ').replace("\n", ' ').replace("\r", ' ').replace("\t", ' ').split())
@@ -33,13 +35,36 @@ class KsMyVoteInfoResult(object):
         text = ballot_link.get_text()
         els[0]['sample_ballots'].append({'href':KsMyVoteInfo.base_url + '/' + href, 'text':text})
 
+    if self.district_soup:
+      els[0]['districts'] = []
+      for row in self.district_soup:
+        if not row.find_all('td'):
+          continue
+        name = row.find_all('td')[0]
+        dtype = row.find_all('td')[1]
+        if not dtype:
+          continue
+        els[0]['districts'].append({'name':name.get_text(), 'type':dtype.get_text()})
+
+    if self.elections_soup:
+      els[0]['elections'] = []
+      for row in self.elections_soup:
+        if not row.find_all('td'):
+          continue
+        cells = row.find_all('td')
+        date = cells[0].get_text()
+        name = cells[1].get_text()
+        etype = cells[2].get_text()
+        how = cells[3].get_text()
+        els[0]['elections'].append({'date':date, 'name':name, 'type':etype, 'how':how})
+
     return els
 
 # end result class
 
 class KsMyVoteInfo(object):
 
-  version = '0.6'
+  version = '0.7'
   base_url = 'https://myvoteinfo.voteks.org/VoterView'
   registrant_search_url = base_url + '/RegistrantSearch.do'
 
@@ -175,7 +200,12 @@ class KsMyVoteInfo(object):
     browser.submit_form(form)
 
     if browser.select('#registrant'):
-      return KsMyVoteInfoResult(browser.select('#registrant'), browser.select('.sampleBallot'))
+      return KsMyVoteInfoResult(
+        browser.select('#registrant'),
+        browser.select('.sampleBallot'),
+        browser.select('#districts table tr'),
+        browser.select('#voting-history table table tr')
+      )
     elif re.search(u'multiple possible results', str(browser.parsed)):
       return KsMyVoteInfoResult(browser.select('.search-result'))
     else:
