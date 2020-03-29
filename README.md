@@ -20,6 +20,16 @@ else:
 
 ```
 
+# Development
+
+```
+% make deps
+% make build
+% make test
+% make distcheck
+% make dist
+```
+
 # Copyright and License
 
 MIT license.

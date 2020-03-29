@@ -1,2 +1,4 @@
 python-dateutil
 robobrowser
+# https://github.com/jarus/flask-testing/issues/143
+Werkzeug==0.16.1
