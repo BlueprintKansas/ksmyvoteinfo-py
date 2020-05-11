@@ -65,13 +65,16 @@ class KsMyVoteInfoResult(object):
 class KsMyVoteInfo(object):
 
   version = '0.7'
-  base_url = 'https://myvoteinfo.voteks.org/VoterView'
-  registrant_search_url = base_url + '/RegistrantSearch.do'
+  base_url = 'https://myvoteinfo.voteks.org/voterview'
+  registrant_search_url = base_url # + '/Registrant/Search'
 
   def __init__(self, **kwargs):
     self.url = self.__class__.registrant_search_url
     if 'url' in kwargs:
       self.url = kwargs['url']
+
+    self.debug = 'debug' in kwargs
+    self.form_url = self.__class__.registrant_search_url + '/registrant/search'
 
   COUNTY_CODES = {
     "Allen": "308700",
@@ -186,18 +189,56 @@ class KsMyVoteInfo(object):
     if county and county not in self.COUNTY_CODES:
         raise Exception("Invalid county: %s" %(county))
 
-    browser = RoboBrowser(user_agent='ksmyvoteinfo ua', parser='html.parser')
-    browser.open(self.url)
-    form = browser.get_forms()[0] #(name_='registrantSearchForm')
+    import http.client as http_client
+    import logging
+    import requests
+    from pprint import pprint
+
+    if self.debug:
+      http_client.HTTPConnection.debuglevel = 1
+      logging.basicConfig()
+      logging.getLogger().setLevel(logging.DEBUG)
+      requests_log = logging.getLogger("requests.packages.urllib3")
+      requests_log.setLevel(logging.DEBUG)
+      requests_log.propagate = True
+    else:
+      http_client.HTTPConnection.debuglevel = 0
+
     date = dateutil.parser.parse(dob)
-    form['nameFirst'] = first_name
-    form['nameLast'] = last_name
-    form['county'] = self.COUNTY_CODES[county] if county else ''
-    form['dobMonth'] = date.strftime('%m')
-    form['dobYear'] = date.strftime('%Y')
-    form['dobDay'] = date.strftime('%d')
-    #print(form)
-    browser.submit_form(form)
+
+    session = requests.Session()
+    form_page = session.get(self.url) # cache session cookie
+    form_page_text = form_page.content
+    #pprint(form_page_text)
+
+    startstr = b'<input name="__RequestVerificationToken" type="hidden" value="'
+    tag_len = len(startstr)
+    start_ind = form_page_text.find(startstr) + tag_len
+    end_ind = form_page_text.find(b'"', start_ind)
+    auth_token = form_page_text[start_ind:end_ind]
+    pprint(auth_token)
+
+    payload = {
+      'FirstName': first_name,
+      'LastName': last_name,
+      'DateOfBirth': date.strftime('%m/%d/%Y'),
+      'DateOfBirth_[month]': date.strftime('%m'),
+      'DateOfBirth_[day]': date.strftime('%d'),
+      'DateOfBirth_[year]': date.strftime('%Y'),
+      '__RequestVerificationToken':auth_token
+    }
+    resp = session.post(self.form_url, data=payload)
+
+    # search result key
+    key_string = b'var key = "'
+    start_key_idx = resp.content.find(key_string) + len(key_string)
+    end_key_idx = resp.content.find(b'"', start_key_idx)
+    search_key = resp.content[start_key_idx:end_key_idx]
+
+    #pprint(resp.content)
+    print(search_key)
+
+    return True
 
     if browser.select('#registrant'):
       return KsMyVoteInfoResult(
@@ -208,6 +249,7 @@ class KsMyVoteInfo(object):
       )
     elif re.search(u'multiple possible results', str(browser.parsed)):
       return KsMyVoteInfoResult(browser.select('.search-result'))
+    # TODO check browser response code for 5xx
     else:
       return False
 
