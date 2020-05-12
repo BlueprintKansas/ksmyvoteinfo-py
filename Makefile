@@ -4,6 +4,9 @@ test:
 build:
 	python3 setup.py build
 
+install:
+	python3 setup.py install
+
 deps:
 	python3 setup.py install
 	pip3 install -U -r requirements.txt

@@ -30,6 +30,7 @@ else:
 % make test
 % make distcheck
 % make dist
+% make install
 ```
 
 # Copyright and License
