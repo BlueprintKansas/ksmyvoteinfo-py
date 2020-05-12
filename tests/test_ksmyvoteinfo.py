@@ -1,5 +1,6 @@
 import pytest
 import re
+from pprint import pprint
 from ksmyvoteinfo import KsMyVoteInfo
 
 def test_init():
@@ -13,4 +14,5 @@ def test_lookup_fail():
 def test_lookup_pass():
   kmvi = KsMyVoteInfo()
   r = kmvi.lookup(first_name='Kris', last_name='Kobach', dob='1966-03-26', county='Douglas')
-  assert r.parsed()[0]['tree']['Party'] == 'Republican'
+  pprint(r.parsed())
+  assert r.parsed()['elements'][0]['tree']['Political Party'] == 'Republican'
