@@ -266,6 +266,7 @@ class KsMyVoteInfo(object):
         registrant_page.select('#tableVotingHistory tbody tr')
       )
     elif re.search(u'multiple possible results', str(registrant_page)):
+      # TODO this is likely broken
       return KsMyVoteInfoResult(browser.select('.search-result'))
     # TODO check browser response code for 5xx
     else:
