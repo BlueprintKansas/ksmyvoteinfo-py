@@ -1,10 +1,17 @@
 import re
 import dateutil.parser
-from robobrowser import RoboBrowser
+import http.client as http_client
+import logging
+import requests
+from bs4 import BeautifulSoup
+from pprint import pprint
+
 
 class KsMyVoteInfoResult(object):
-  def __init__(self, soup, ballot_soup=None, district_soup=None, elections_soup=None):
-    self.soup = soup
+  def __init__(self, registrant_name, registrant_address, registrant_details, ballot_soup=None, district_soup=None, elections_soup=None):
+    self.registrant_name = registrant_name
+    self.registrant_address = registrant_address
+    self.registrant_details = registrant_details
     self.ballot_soup = ballot_soup
     self.district_soup = district_soup
     self.elections_soup = elections_soup
@@ -13,12 +20,15 @@ class KsMyVoteInfoResult(object):
     return ' '.join(val.replace("\xa0", ' ').replace("\n", ' ').replace("\r", ' ').replace("\t", ' ').split())
 
   def parsed(self):
+    registrant = {}
     els = []
-    for el in self.soup:
+    registrant['name'] = self.norm_whitespace(self.registrant_name.get_text())
+    registrant['address'] = self.norm_whitespace(self.registrant_address[0].get_text())
+    for el in self.registrant_details:
       p = {}
       p['spans'] = el.find_all('span')
-      p['labels'] = el.find_all('span', class_='label')
-      p['data'] = el.find_all('span', class_='data')
+      p['labels'] = el.find_all('label', class_='control-label-important')
+      p['data'] = el.find_all('label', class_='control-data-important')
       tree = {}
       for idx, label in enumerate(p['labels']):
         key = self.norm_whitespace(label.get_text())
@@ -52,21 +62,21 @@ class KsMyVoteInfoResult(object):
         if not row.find_all('td'):
           continue
         cells = row.find_all('td')
-        date = cells[0].get_text()
-        name = cells[1].get_text()
-        etype = cells[2].get_text()
-        how = cells[3].get_text()
+        date = self.norm_whitespace(cells[0].get_text())
+        name = self.norm_whitespace(cells[1].get_text())
+        etype = self.norm_whitespace(cells[2].get_text())
+        how = self.norm_whitespace(cells[3].get_text())
         els[0]['elections'].append({'date':date, 'name':name, 'type':etype, 'how':how})
 
-    return els
+    return { 'registrant': registrant, 'elements': els }
 
 # end result class
 
 class KsMyVoteInfo(object):
 
-  version = '0.7'
-  base_url = 'https://myvoteinfo.voteks.org/voterview'
-  registrant_search_url = base_url # + '/Registrant/Search'
+  version = '1.0'
+  base_url = u'https://myvoteinfo.voteks.org/voterview'
+  registrant_search_url = base_url
 
   def __init__(self, **kwargs):
     self.url = self.__class__.registrant_search_url
@@ -184,15 +194,24 @@ class KsMyVoteInfo(object):
     "Wyandotte": "300800",
   }
 
+  def get_auth_token(self, body):
+    startstr = b'<input name="__RequestVerificationToken" type="hidden" value="'
+    tag_len = len(startstr)
+    start_ind = body.find(startstr) + tag_len
+    end_ind = body.find(b'"', start_ind)
+    auth_token = body[start_ind:end_ind]
+    return auth_token
+
+  def get_search_key(self, body):
+    key_string = b'var key = "'
+    start_key_idx = body.find(key_string) + len(key_string)
+    end_key_idx = body.find(b'"', start_key_idx)
+    search_key = body[start_key_idx:end_key_idx]
+    return search_key.decode(encoding='UTF-8')
 
   def lookup(self, *, first_name, last_name, dob, county=None):
     if county and county not in self.COUNTY_CODES:
         raise Exception("Invalid county: %s" %(county))
-
-    import http.client as http_client
-    import logging
-    import requests
-    from pprint import pprint
 
     if self.debug:
       http_client.HTTPConnection.debuglevel = 1
@@ -211,12 +230,8 @@ class KsMyVoteInfo(object):
     form_page_text = form_page.content
     #pprint(form_page_text)
 
-    startstr = b'<input name="__RequestVerificationToken" type="hidden" value="'
-    tag_len = len(startstr)
-    start_ind = form_page_text.find(startstr) + tag_len
-    end_ind = form_page_text.find(b'"', start_ind)
-    auth_token = form_page_text[start_ind:end_ind]
-    pprint(auth_token)
+    auth_token = self.get_auth_token(form_page_text)
+    #pprint(auth_token)
 
     payload = {
       'FirstName': first_name,
@@ -230,24 +245,27 @@ class KsMyVoteInfo(object):
     resp = session.post(self.form_url, data=payload)
 
     # search result key
-    key_string = b'var key = "'
-    start_key_idx = resp.content.find(key_string) + len(key_string)
-    end_key_idx = resp.content.find(b'"', start_key_idx)
-    search_key = resp.content[start_key_idx:end_key_idx]
+    search_key = self.get_search_key(resp.content)
+    if search_key == "\r":
+      return False
 
-    #pprint(resp.content)
-    print(search_key)
+    #print(search_key)
 
-    return True
+    # registrant
+    registrant_url = self.url + u'/registrant/searchresult/' + search_key
+    registrant_page = BeautifulSoup(session.get(registrant_url).content, 'html.parser')
+    #print(registrant_page.prettify())
 
-    if browser.select('#registrant'):
+    if registrant_page.select('h1'):
       return KsMyVoteInfoResult(
-        browser.select('#registrant'),
-        browser.select('.sampleBallot'),
-        browser.select('#districts table tr'),
-        browser.select('#voting-history table table tr')
+        registrant_page.find('h1'),
+        registrant_page.select('#labelResidenceAddress'),
+        registrant_page.select('#reg-detail-header-row'),
+        registrant_page.select('.divSampleBallots'),
+        registrant_page.select('container body-content accordion'),
+        registrant_page.select('#tableVotingHistory tbody tr')
       )
-    elif re.search(u'multiple possible results', str(browser.parsed)):
+    elif re.search(u'multiple possible results', str(registrant_page)):
       return KsMyVoteInfoResult(browser.select('.search-result'))
     # TODO check browser response code for 5xx
     else:
