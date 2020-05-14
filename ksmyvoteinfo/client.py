@@ -8,6 +8,13 @@ from pprint import pprint
 
 
 class KsMyVoteInfoResult(object):
+  def __init__(self, registrants):
+    self.registrants = registrants
+
+  def parsed(self):
+    return self.registrants
+
+class KsMyVoteInfoResultParser(object):
   def __init__(self, registrant_name, registrant_address, registrant_details, ballot_soup=None, district_soup=None, elections_soup=None):
     self.registrant_name = registrant_name
     self.registrant_address = registrant_address
@@ -21,32 +28,29 @@ class KsMyVoteInfoResult(object):
 
   def parsed(self):
     registrant = {}
-    els = []
     registrant['name'] = self.norm_whitespace(self.registrant_name.get_text())
-    registrant['address'] = self.norm_whitespace(self.registrant_address[0].get_text())
+    registrant['Address'] = self.norm_whitespace(self.registrant_address[0].get_text())
     for el in self.registrant_details:
-      p = {}
-      p['spans'] = el.find_all('span')
-      p['labels'] = el.find_all('label', class_='control-label-important')
-      p['data'] = el.find_all('label', class_='control-data-important')
+      registrant['spans'] = el.find_all('span')
+      registrant['labels'] = el.find_all('label', class_='control-label-important')
+      registrant['data'] = el.find_all('label', class_='control-data-important')
       tree = {}
-      for idx, label in enumerate(p['labels']):
+      for idx, label in enumerate(registrant['labels']):
         key = self.norm_whitespace(label.get_text())
-        strings = p['data'][idx].stripped_strings
+        strings = registrant['data'][idx].stripped_strings
         val = '<br/>'.join(strings)
         tree[key] = self.norm_whitespace(val)
-      p['tree'] = tree
-      els.append(p)
+      registrant['tree'] = tree
 
     if self.ballot_soup: # only if we have one Result
-      els[0]['sample_ballots'] = []
+      registrant['sample_ballots'] = []
       for ballot_link in self.ballot_soup:
         href = ballot_link.get('href')
         text = ballot_link.get_text()
-        els[0]['sample_ballots'].append({'href':KsMyVoteInfo.base_url + '/' + href, 'text':text})
+        registrant['sample_ballots'].append({'href':KsMyVoteInfo.base_url + '/' + href, 'text':text})
 
     if self.district_soup:
-      els[0]['districts'] = []
+      registrant['districts'] = []
       for row in self.district_soup:
         if not row.find_all('td'):
           continue
@@ -54,10 +58,10 @@ class KsMyVoteInfoResult(object):
         dtype = row.find_all('td')[1]
         if not dtype:
           continue
-        els[0]['districts'].append({'name':name.get_text(), 'type':dtype.get_text()})
+        registrant['districts'].append({'name':name.get_text(), 'type':dtype.get_text()})
 
     if self.elections_soup:
-      els[0]['elections'] = []
+      registrant['elections'] = []
       for row in self.elections_soup:
         if not row.find_all('td'):
           continue
@@ -66,15 +70,15 @@ class KsMyVoteInfoResult(object):
         name = self.norm_whitespace(cells[1].get_text())
         etype = self.norm_whitespace(cells[2].get_text())
         how = self.norm_whitespace(cells[3].get_text())
-        els[0]['elections'].append({'date':date, 'name':name, 'type':etype, 'how':how})
+        registrant['elections'].append({'date':date, 'name':name, 'type':etype, 'how':how})
 
-    return { 'registrant': registrant, 'elements': els }
+    # for backwards compat, return list of one
+    return [registrant]
 
 # end result class
 
 class KsMyVoteInfo(object):
-
-  version = '1.0'
+  version = '1.01'
   base_url = u'https://myvoteinfo.voteks.org/voterview'
   registrant_search_url = base_url
 
@@ -85,114 +89,6 @@ class KsMyVoteInfo(object):
 
     self.debug = 'debug' in kwargs
     self.form_url = self.__class__.registrant_search_url + '/registrant/search'
-
-  COUNTY_CODES = {
-    "Allen": "308700",
-    "Anderson": "308800",
-    "Atchison": "305500",
-    "Barber": "305700",
-    "Barton": "301000",
-    "Bourbon": "308900",
-    "Brown": "305200",
-    "Butler": "307200",
-    "Chase": "301900",
-    "Chautauqua": "307300",
-    "Cherokee": "310500",
-    "Cheyenne": "302900",
-    "Clark": "304100",
-    "Clay": "301100",
-    "Cloud": "301200",
-    "Coffey": "307400",
-    "Comanche": "305800",
-    "Cowley": "307500",
-    "Crawford": "301300",
-    "Decatur": "302500",
-    "Dickinson": "303900",
-    "Doniphan": "308000",
-    "Douglas": "301800",
-    "Edwards": "308200",
-    "Elk": "307600",
-    "Ellis": "300100",
-    "Ellsworth": "303500",
-    "Finney": "310100",
-    "Ford": "304200",
-    "Franklin": "301600",
-    "Geary": "308600",
-    "Gove": "309400",
-    "Graham": "302800",
-    "Grant": "304300",
-    "Gray": "304400",
-    "Greeley": "310300",
-    "Greenwood": "307700",
-    "Hamilton": "308400",
-    "Harper": "305900",
-    "Harvey": "303600",
-    "Haskell": "304500",
-    "Hodgeman": "308300",
-    "Jackson": "305300",
-    "Jefferson": "301700",
-    "Jewell": "302600",
-    "Johnson": "305600",
-    "Kearny": "308100",
-    "Kingman": "306000",
-    "Kiowa": "306100",
-    "Labette": "309000",
-    "Lane": "309600",
-    "Leavenworth": "301500",
-    "Lincoln": "303700",
-    "Linn": "309100",
-    "Logan": "309700",
-    "Lyon": "300200",
-    "Marion": "303800",
-    "Marshall": "305400",
-    "McPherson": "304000",
-    "Meade": "304600",
-    "Miami": "300300",
-    "Mitchell": "307100",
-    "Montgomery": "309300",
-    "Morris": "302000",
-    "Morton": "304700",
-    "Nemaha": "304900",
-    "Neosho": "309200",
-    "Ness": "309500",
-    "Norton": "303000",
-    "Osage": "302100",
-    "Osborne": "306700",
-    "Ottawa": "306800",
-    "Pawnee": "308500",
-    "Phillips": "306600",
-    "Pottawatomie": "305000",
-    "Pratt": "306200",
-    "Rawlins": "302300",
-    "Reno": "303200",
-    "Republic": "306500",
-    "Rice": "303300",
-    "Riley": "300400",
-    "Rooks": "306900",
-    "Rush": "310400",
-    "Russell": "303400",
-    "Saline": "300600",
-    "Scott": "309800",
-    "Sedgwick": "300500",
-    "Seward": "304800",
-    "Shawnee": "301400",
-    "Sheridan": "302400",
-    "Sherman": "300900",
-    "Smith": "307000",
-    "Stafford": "306300",
-    "Stanton": "300700",
-    "Stevens": "310200",
-    "Sumner": "306400",
-    "Thomas": "303100",
-    "Trego": "302700",
-    "Wabaunsee": "302200",
-    "Wallace": "309900",
-    "Washington": "305100",
-    "Wichita": "310000",
-    "Wilson": "307800",
-    "Woodson": "307900",
-    "Wyandotte": "300800",
-  }
 
   def get_auth_token(self, body):
     startstr = b'<input name="__RequestVerificationToken" type="hidden" value="'
@@ -209,10 +105,7 @@ class KsMyVoteInfo(object):
     search_key = body[start_key_idx:end_key_idx]
     return search_key.decode(encoding='UTF-8')
 
-  def lookup(self, *, first_name, last_name, dob, county=None):
-    if county and county not in self.COUNTY_CODES:
-        raise Exception("Invalid county: %s" %(county))
-
+  def lookup(self, *, first_name, last_name, dob):
     if self.debug:
       http_client.HTTPConnection.debuglevel = 1
       logging.basicConfig()
@@ -221,7 +114,7 @@ class KsMyVoteInfo(object):
       requests_log.setLevel(logging.DEBUG)
       requests_log.propagate = True
     else:
-      http_client.HTTPConnection.debuglevel = 0
+      http_client.HTTPConnection.debuglevel = False
 
     date = dateutil.parser.parse(dob)
 
@@ -244,20 +137,36 @@ class KsMyVoteInfo(object):
     }
     resp = session.post(self.form_url, data=payload)
 
-    # search result key
-    search_key = self.get_search_key(resp.content)
-    if search_key == "\r":
-      return False
+    #print(resp.content)
 
-    #print(search_key)
+    # if there are multiple/ambiguous results, look for signal string
+    if b'ShowBusyIndicator' in resp.content:
+      search_ids = re.findall(r'data-search-result-id="(\w+)"', str(resp.content))
+      registrants = []
+      for search_id in search_ids:
+        registrant = self.fetch_registrant(session, search_id).parsed()
+        registrants.append(registrant[0])
 
+      return KsMyVoteInfoResult(registrants)
+
+    else:
+      # search result key
+      search_key = self.get_search_key(resp.content)
+      if search_key == "\r":
+        return False
+
+      #print("search_key:%s" %(search_key))
+
+      return KsMyVoteInfoResult([self.fetch_registrant(session, search_key)])
+
+  def fetch_registrant(self, session, search_key):
     # registrant
     registrant_url = self.url + u'/registrant/searchresult/' + search_key
     registrant_page = BeautifulSoup(session.get(registrant_url).content, 'html.parser')
     #print(registrant_page.prettify())
 
     if registrant_page.select('h1'):
-      return KsMyVoteInfoResult(
+      return KsMyVoteInfoResultParser(
         registrant_page.find('h1'),
         registrant_page.select('#labelResidenceAddress'),
         registrant_page.select('#reg-detail-header-row'),
@@ -265,9 +174,6 @@ class KsMyVoteInfo(object):
         registrant_page.select('container body-content accordion'),
         registrant_page.select('#tableVotingHistory tbody tr')
       )
-    elif re.search(u'multiple possible results', str(registrant_page)):
-      # TODO this is likely broken
-      return KsMyVoteInfoResult(browser.select('.search-result'))
     # TODO check browser response code for 5xx
     else:
       return False
