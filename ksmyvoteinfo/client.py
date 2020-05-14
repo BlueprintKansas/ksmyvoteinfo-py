@@ -6,7 +6,6 @@ import requests
 from bs4 import BeautifulSoup
 from pprint import pprint
 
-
 class KsMyVoteInfoResult(object):
   def __init__(self, registrants):
     self.registrants = registrants
