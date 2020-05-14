@@ -1,2 +1,5 @@
 python-dateutil
-robobrowser
+requests
+beautifulsoup4
+# https://github.com/jarus/flask-testing/issues/143
+Werkzeug==0.16.1

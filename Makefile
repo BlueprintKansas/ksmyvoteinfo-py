@@ -2,17 +2,20 @@ test:
 	PYTHONPATH='.' pytest -s
 
 build:
-	python setup.py build
+	python3 setup.py build
+
+install:
+	python3 setup.py install
 
 deps:
-	python setup.py install
-	pip install -U -r requirements.txt
-	pip install pytest
+	python3 setup.py install
+	pip3 install -U -r requirements.txt
+	pip3 install pytest
 
 distcheck:
-	python setup.py sdist
+	python3 setup.py sdist
 
 dist:
-	python setup.py sdist upload
+	python3 setup.py sdist upload
 
 .PHONY: test build deps distcheck dist
