@@ -27,8 +27,6 @@ class KsMyVoteInfoResultParser(object):
 
   def parsed(self):
     registrant = {}
-    registrant['name'] = self.norm_whitespace(self.registrant_name.get_text())
-    registrant['Address'] = self.norm_whitespace(self.registrant_address[0].get_text())
     for el in self.registrant_details:
       registrant['spans'] = el.find_all('span')
       registrant['labels'] = el.find_all('label', class_='control-label-important')
@@ -40,6 +38,9 @@ class KsMyVoteInfoResultParser(object):
         val = '<br/>'.join(strings)
         tree[key] = self.norm_whitespace(val)
       registrant['tree'] = tree
+
+    registrant['tree']['Address'] = self.norm_whitespace(self.registrant_address[0].get_text())
+    registrant['tree']['Name'] = self.norm_whitespace(self.registrant_name.get_text())
 
     if self.ballot_soup: # only if we have one Result
       registrant['sample_ballots'] = []
