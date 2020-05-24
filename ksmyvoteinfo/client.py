@@ -27,6 +27,9 @@ class KsMyVoteInfoResultParser(object):
 
   def parsed(self):
     registrant = {}
+    from ksmyvoteinfo.counties import KsMyVoteInfoCounties
+    counties = KsMyVoteInfoCounties().names()
+
     for el in self.registrant_details:
       registrant['spans'] = el.find_all('span')
       registrant['labels'] = el.find_all('label', class_='control-label-important')
@@ -39,7 +42,15 @@ class KsMyVoteInfoResultParser(object):
         tree[key] = self.norm_whitespace(val)
       registrant['tree'] = tree
 
-    registrant['tree']['Address'] = self.norm_whitespace(self.registrant_address[0].get_text())
+    address_with_county = self.norm_whitespace(self.registrant_address[0].get_text())
+    address_matches = re.fullmatch(r"(.+) - ([a-z\ ]+)", address_with_county, re.I)
+    address = address_matches.group(1)
+    county = address_matches.group(2)
+    if county not in counties:
+      county = ''
+
+    registrant['tree']['Address'] = address
+    registrant['tree']['County'] = county
     registrant['tree']['Name'] = self.norm_whitespace(self.registrant_name.get_text())
 
     if self.ballot_soup: # only if we have one Result
@@ -78,7 +89,7 @@ class KsMyVoteInfoResultParser(object):
 # end result class
 
 class KsMyVoteInfo(object):
-  version = '1.1'
+  version = '1.2'
   base_url = u'https://myvoteinfo.voteks.org/voterview'
   registrant_search_url = base_url
 

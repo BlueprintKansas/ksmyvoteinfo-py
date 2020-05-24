@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='ksmyvoteinfo',
-      version='1.1',
+      version='1.2',
       description='Query the KS SOS site for voter registration',
       url='http://github.com/BlueprintKansas/ksmyvoteinfo-py',
       author='Peter Karman',
