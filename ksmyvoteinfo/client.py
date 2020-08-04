@@ -14,13 +14,14 @@ class KsMyVoteInfoResult(object):
     return self.registrants
 
 class KsMyVoteInfoResultParser(object):
-  def __init__(self, registrant_name, registrant_address, registrant_details, ballot_soup=None, district_soup=None, elections_soup=None):
+  def __init__(self, registrant_name, registrant_address, registrant_details, ballot_soup=None, district_soup=None, elections_soup=None, polling_soup=None):
     self.registrant_name = registrant_name
     self.registrant_address = registrant_address
     self.registrant_details = registrant_details
     self.ballot_soup = ballot_soup
     self.district_soup = district_soup
     self.elections_soup = elections_soup
+    self.polling_soup = polling_soup
 
   def norm_whitespace(self, val):
     return ' '.join(val.replace("\xa0", ' ').replace("\n", ' ').replace("\r", ' ').replace("\t", ' ').split())
@@ -83,13 +84,18 @@ class KsMyVoteInfoResultParser(object):
         how = self.norm_whitespace(cells[3].get_text())
         registrant['elections'].append({'date':date, 'name':name, 'type':etype, 'how':how})
 
+    if self.polling_soup:
+      registrant['polling'] = []
+      for location in self.polling_soup.select('a'):
+        registrant['polling'].append({'name': self.norm_whitespace(location.get_text()), 'href': location.get('href')})
+
     # for backwards compat, return list of one
     return [registrant]
 
 # end result class
 
 class KsMyVoteInfo(object):
-  version = '1.2'
+  version = '1.3'
   base_url = u'https://myvoteinfo.voteks.org/voterview'
   registrant_search_url = base_url
 
@@ -177,13 +183,22 @@ class KsMyVoteInfo(object):
     #print(registrant_page.prettify())
 
     if registrant_page.select('h1'):
+      elections = registrant_page.find('select', {'id':'cmboElection'})
+      election_key = elections.find_all('option', selected=True)[0].get('value')
+      #print('election_key={}'.format(election_key))
+      precinct_key = registrant_page.find('input', {'id':'PrecinctPartKey'}).get('value')
+      #print('precinct_key={}'.format(precinct_key))
+      polling_url = self.url + u'/votingplace/getpollingplaceorvotecenters?KeyPrecinctPart={}&ElectionKey={}'.format(precinct_key, election_key)
+      polling_response = session.post(polling_url).content
+
       return KsMyVoteInfoResultParser(
         registrant_page.find('h1'),
         registrant_page.select('#labelResidenceAddress'),
         registrant_page.select('#reg-detail-header-row'),
         registrant_page.select('.divSampleBallots'),
         registrant_page.select('container body-content accordion'),
-        registrant_page.select('#tableVotingHistory tbody tr')
+        registrant_page.select('#tableVotingHistory tbody tr'),
+        BeautifulSoup(polling_response, 'html.parser')
       )
     # TODO check browser response code for 5xx
     else:
