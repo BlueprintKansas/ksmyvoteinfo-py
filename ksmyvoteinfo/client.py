@@ -20,7 +20,7 @@ MOCK_REGISTRANT = [
         "tree": {
             "Political Party": "Democratic",
             "Precinct": "03<br/>003",
-            "Address": "123 Sunrise Drive Lawrence, KS 66044-2435",
+            "Address": "123 Sunrise Drive Lawrence, KS 66044-9999",
             "County": "Douglas",
             "Name": "No Such Person",
         },
@@ -287,7 +287,7 @@ class KsMyVoteInfo(object):
 
     def lookup(self, *, first_name, last_name, dob):
         if self.mock:
-            return KsMyVoteInfoResult([])
+            return KsMyVoteInfoResult(MOCK_REGISTRANT)
 
         if self.debug:
             http_client.HTTPConnection.debuglevel = 1
