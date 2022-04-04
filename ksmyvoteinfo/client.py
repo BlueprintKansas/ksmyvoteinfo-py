@@ -257,7 +257,7 @@ class KsMyVoteInfoResultParser(object):
 
 
 class KsMyVoteInfo(object):
-    version = "1.3"
+    version = "1.4"
     base_url = "https://myvoteinfo.voteks.org/voterview"
     registrant_search_url = base_url
 
