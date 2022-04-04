@@ -14,7 +14,7 @@ Scrapes the https://myvoteinfo.voteks.org/voterview site.
 ```python
 import ksmyvoteinfo
 kmvi = ksmyvoteinfo.KsMyVoteInfo()
-r = kmvi.lookup(first_name='No', last_name='Suchperson', dob='1966-03-26', county='Douglas')
+r = kmvi.lookup(first_name='No', last_name='Suchperson', dob='1966-03-26')
 if r:
   print(r.parsed()[0]['tree'])
 else:
