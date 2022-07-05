@@ -188,8 +188,9 @@ class KsMyVoteInfoResultParser(object):
                 tree[key] = self.norm_whitespace(val)
             registrant["tree"] = tree
 
+        # inline whitespace pattern to preserve comma-delimited city
         address_with_county = self.norm_whitespace(
-            self.registrant_address[0].get_text()
+            self.registrant_address[0].get_text().replace("\r\n", ", ")
         )
         address_matches = re.fullmatch(r"(.+) - ([a-z\ ]+)", address_with_county, re.I)
         address = address_matches.group(1)
@@ -257,7 +258,7 @@ class KsMyVoteInfoResultParser(object):
 
 
 class KsMyVoteInfo(object):
-    version = "1.4"
+    version = "1.5"
     base_url = "https://myvoteinfo.voteks.org/voterview"
     registrant_search_url = base_url
 
