@@ -258,7 +258,7 @@ class KsMyVoteInfoResultParser(object):
 
 
 class KsMyVoteInfo(object):
-    version = "1.5"
+    version = "1.6"
     base_url = "https://myvoteinfo.voteks.org/voterview"
     registrant_search_url = base_url
 
@@ -321,7 +321,7 @@ class KsMyVoteInfo(object):
         }
         resp = session.post(self.form_url, data=payload)
 
-        # print(resp.content)
+        self.debug and print(resp.content)
 
         # if there are multiple/ambiguous results, look for signal string
         if b"ShowBusyIndicator" in resp.content:
@@ -344,12 +344,13 @@ class KsMyVoteInfo(object):
             return KsMyVoteInfoResult([self.fetch_registrant(session, search_key)])
 
     def fetch_registrant(self, session, search_key):
+        self.debug and print(f"search_key={search_key}")
         # registrant
         registrant_url = self.url + "/registrant/searchresult/" + search_key
         registrant_page = BeautifulSoup(
             session.get(registrant_url).content, "html.parser"
         )
-        # print(registrant_page.prettify())
+        self.debug and print(registrant_page.prettify())
 
         if registrant_page.select("h1"):
             elections = registrant_page.find("select", {"id": "cmboElection"})
