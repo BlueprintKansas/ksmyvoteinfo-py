@@ -267,7 +267,7 @@ class KsMyVoteInfo(object):
         if "url" in kwargs:
             self.url = kwargs["url"]
 
-        self.debug = "debug" in kwargs
+        self.debug = kwargs.get("debug")
         self.form_url = self.__class__.registrant_search_url + "/registrant/search"
         self.mock = os.environ.get("KSMYVOTEINFO_ENV", "prod") == "mock"
 

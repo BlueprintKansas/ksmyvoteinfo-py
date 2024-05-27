@@ -23,6 +23,8 @@ else:
 # Development
 
 ```
+% pyenv virtualenv 3.12.3 ksmyvoteinfo-3.12
+% echo ksmyvoteinfo-3.12 > .python-version
 % make deps
 % make build
 % make test
