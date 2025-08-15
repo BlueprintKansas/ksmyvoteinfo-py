@@ -2,4 +2,4 @@ python-dateutil
 requests
 beautifulsoup4
 # https://github.com/jarus/flask-testing/issues/143
-Werkzeug==0.16.1
+Werkzeug==3.0.6
