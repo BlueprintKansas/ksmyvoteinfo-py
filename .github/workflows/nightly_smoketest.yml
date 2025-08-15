@@ -1,29 +1,28 @@
-name: Nightly smoke test
-
 on:
   workflow_dispatch: # Allow running on-demand
   schedule:
     - cron: "0 8 * * *"
 
+name: Nightly smoke test
 jobs:
   smoketest:
     name: Nightly smoke test
     runs-on: ubuntu-latest
-  strategy:
-    max-parallel: 4
-    matrix:
-      python-version: [3.10.18, 3.11.13, 3.12.11]
-  steps:
-    - uses: actions/checkout@v5
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Upgrade pip and setuptools
-      run: pip install --upgrade pip setuptools
-    - name: Install Dev Dependencies
-      run: make deps
-    - name: Lint
-      run: make lint
-    - name: Test
-      run: make test
+    strategy:
+      max-parallel: 4
+      matrix:
+        python-version: [3.10.18, 3.11.13, 3.12.11]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Upgrade pip and setuptools
+        run: pip install --upgrade pip setuptools
+      - name: Install Dev Dependencies
+        run: make deps
+      - name: Lint
+        run: make lint
+      - name: Test
+        run: make test
