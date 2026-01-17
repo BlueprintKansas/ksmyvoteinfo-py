@@ -258,8 +258,8 @@ class KsMyVoteInfoResultParser(object):
 
 
 class KsMyVoteInfo(object):
-    version = "1.6"
-    base_url = "https://myvoteinfo.voteks.org/voterview"
+    version = "1.7"
+    base_url = "https://kansasvoterinfo.gov/VoterView"
     registrant_search_url = base_url
 
     def __init__(self, **kwargs):

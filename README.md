@@ -5,7 +5,7 @@ KsMyVoteInfo Python module makes it easy to search the Kansas SOS voter registra
 for the registrant details. You supply first/last name and date of birth, this gem looks
 it up and return the HTML snippet from the site.
 
-Scrapes the https://myvoteinfo.voteks.org/voterview site.
+Scrapes the https://kansasvoterinfo.gov/VoterView site.
 
 # Example
 
