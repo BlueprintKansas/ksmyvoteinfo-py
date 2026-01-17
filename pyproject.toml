@@ -1,6 +1,6 @@
 [project]
 name = "ksmyvoteinfo"
-version = "1.6"
+version = "1.7"
 description = "Query the KS SOS site for voter registration"
 authors = [
     {name = "Peter Karman", email = "peter@peknet.com"},
