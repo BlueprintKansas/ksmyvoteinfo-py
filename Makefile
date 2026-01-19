@@ -12,11 +12,11 @@ build: ## Build lib
 
 .PHONY: install
 install: ## Install lib
-	python3 setup.py install
+	pip install .
 
 .PHONY: deps
 deps: ## Install dependencies
-	pip3 install setuptools wheel twine build
+	pip3 install setuptools wheel twine==6.0.0 build
 	python3 setup.py install
 	pip3 install -U -r requirements.txt
 	pip3 install pytest black flake8
@@ -36,5 +36,5 @@ lint: ## Run code linters
 
 .PHONY: clean
 clean: ## Clean up workspace
-	rm -rf dist build *.egg-info
+	rm -rf src dist build *.egg-info
 

@@ -258,7 +258,7 @@ class KsMyVoteInfoResultParser(object):
 
 
 class KsMyVoteInfo(object):
-    version = "1.8"
+    version = "1.8.1"
     base_url = "https://kansasvoterinfo.gov/VoterView"
     registrant_search_url = base_url
 

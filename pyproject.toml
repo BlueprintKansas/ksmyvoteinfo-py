@@ -1,6 +1,6 @@
 [project]
 name = "ksmyvoteinfo"
-version = "1.8"
+version = "1.8.1"
 description = "Query the KS SOS site for voter registration"
 authors = [
     {name = "Peter Karman", email = "peter@peknet.com"},
@@ -13,14 +13,12 @@ dependencies = [
 ]
 requires-python = ">=3.11"
 readme = "README.md"
-license = {file = "LICENSE"}
+license = "MIT"
+license-files = ["LICENSE"]
 
 [project.urls]
 Homepage = "http://github.com/BlueprintKansas/ksmyvoteinfo-py"
+
 [build-system]
-requires = ["pdm-backend"]
-build-backend = "pdm.backend"
-
-
-[tool.pdm]
-distribution = true
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
