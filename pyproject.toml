@@ -1,6 +1,6 @@
 [project]
 name = "ksmyvoteinfo"
-version = "1.7"
+version = "1.8"
 description = "Query the KS SOS site for voter registration"
 authors = [
     {name = "Peter Karman", email = "peter@peknet.com"},
@@ -11,7 +11,7 @@ dependencies = [
     "requests",
     "Werkzeug",
 ]
-requires-python = ">=3.12"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {file = "LICENSE"}
 
