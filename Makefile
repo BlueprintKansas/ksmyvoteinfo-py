@@ -31,8 +31,8 @@ dist: ## Upload distribution
 
 .PHONY: lint
 lint: ## Run code linters
-	flake8 ksmyvoteinfo/*py
-	black ksmyvoteinfo/*py
+	flake8 ksmyvoteinfo/*py tests/*py
+	black ksmyvoteinfo/*py tests/*py
 
 .PHONY: clean
 clean: ## Clean up workspace

@@ -258,7 +258,7 @@ class KsMyVoteInfoResultParser(object):
 
 
 class KsMyVoteInfo(object):
-    version = "1.8.1"
+    version = "1.8.2"
     base_url = "https://kansasvoterinfo.gov/VoterView"
     registrant_search_url = base_url
 
@@ -267,7 +267,7 @@ class KsMyVoteInfo(object):
         if "url" in kwargs:
             self.url = kwargs["url"]
 
-        self.debug = kwargs.get("debug")
+        self.debug = kwargs.get("debug") or os.environ.get("KSMYVOTEINFO_DEBUG", None)
         self.form_url = self.__class__.registrant_search_url + "/registrant/search"
         self.mock = os.environ.get("KSMYVOTEINFO_ENV", "prod") == "mock"
 
